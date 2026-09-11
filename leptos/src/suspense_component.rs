@@ -22,7 +22,7 @@ use tachys::{
     either::Either,
     html::attribute::{Attribute, any_attribute::AnyAttribute},
     hydration::Cursor,
-    reactive_graph::{OwnedView, OwnedViewState},
+    reactive_graph::{OwnedView, OwnedViewState, RenderEffectState},
     ssr::StreamBuilder,
     view::{
         Mountable, Position, PositionState, Render, RenderFlags, RenderHtml,
@@ -31,6 +31,9 @@ use tachys::{
     },
 };
 use throw_error::ErrorHookFuture;
+
+#[cfg(all(test, any(feature = "csr", feature = "hydrate")))]
+mod tests;
 
 /// If any [`Resource`](crate::prelude::Resource) is read in the `children` of this
 /// component, it will show the `fallback` while they are loading. Once all are resolved,
@@ -338,7 +341,7 @@ where
     Fal: Render + Send + 'static,
     Chil: Render + Send + 'static,
 {
-    type State = RenderEffect<
+    type State = RenderEffectState<
         OwnedViewState<EitherKeepAliveState<Chil::State, Fal::State>>,
     >;
 
@@ -387,6 +390,7 @@ where
 
             state
         })
+        .into()
     }
 
     fn rebuild(self, state: &mut Self::State) {
@@ -678,6 +682,7 @@ where
                 this.hydrate::<FROM_SERVER>(&cursor, &position)
             }
         })
+        .into()
     }
 
     async fn hydrate_async(
@@ -749,6 +754,7 @@ where
             initial,
         )
         .await
+        .into()
     }
 
     fn into_owned(self) -> Self::Owned {

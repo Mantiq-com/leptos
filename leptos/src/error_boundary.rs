@@ -20,7 +20,7 @@ use std::{
 use tachys::{
     html::attribute::{Attribute, any_attribute::AnyAttribute},
     hydration::Cursor,
-    reactive_graph::OwnedView,
+    reactive_graph::{OwnedView, RenderEffectState},
     ssr::{StreamBuilder, StreamChunk},
     view::{
         Mountable, Position, PositionState, Render, RenderFlags, RenderHtml,
@@ -28,6 +28,9 @@ use tachys::{
     },
 };
 use throw_error::{Error, ErrorHook, ErrorId};
+
+#[cfg(all(test, any(feature = "csr", feature = "hydrate")))]
+mod tests;
 
 /// When you render a `Result<_, _>` in your view, in the `Err` case it will
 /// render nothing, and search up through the view tree for an `<ErrorBoundary/>`.
@@ -193,7 +196,8 @@ where
     FalFn: FnMut(ArcRwSignal<Errors>) -> Fal + Send + 'static,
     Fal: Render + 'static,
 {
-    type State = RenderEffect<ErrorBoundaryViewState<Chil::State, Fal::State>>;
+    type State =
+        RenderEffectState<ErrorBoundaryViewState<Chil::State, Fal::State>>;
 
     fn build(mut self) -> Self::State {
         let hook = Arc::clone(&self.hook);
@@ -238,6 +242,7 @@ where
                 }
             },
         )
+        .into()
     }
 
     fn rebuild(self, state: &mut Self::State) {
@@ -510,6 +515,7 @@ where
                 }
             },
         )
+        .into()
     }
 
     async fn hydrate_async(
@@ -583,6 +589,7 @@ where
             initial,
         )
         .await
+        .into()
     }
 
     fn into_owned(self) -> Self::Owned {
