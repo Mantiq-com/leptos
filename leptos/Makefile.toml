@@ -1,5 +1,13 @@
 extend = { path = "../cargo-make/main.toml" }
 
+[tasks.ci]
+dependencies = ["lint", "test-each-feature", "doctests", "test-hot-reload"]
+
+[tasks.test-hot-reload]
+env = { LEPTOS_WATCH = "true" }
+command = "cargo"
+args = ["test", "--features=ssr", "--test=hot_reload"]
+
 [tasks.check]
 clear = true
 dependencies = [
