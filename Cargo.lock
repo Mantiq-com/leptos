@@ -4029,6 +4029,7 @@ dependencies = [
  "erased",
  "futures",
  "html-escape",
+ "hydration_context",
  "indexmap",
  "itertools",
  "js-sys",
