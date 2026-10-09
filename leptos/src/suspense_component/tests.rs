@@ -54,7 +54,6 @@ fn boundary<const TRANSITION: bool, Chil>(
         children,
         error_boundary_parent: None,
         has_tasks: Arc::new(|| false),
-        strict: false,
     }
 }
 
