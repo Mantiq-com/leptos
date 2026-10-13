@@ -281,8 +281,13 @@ where
 
             let subscriber = inner.to_any_subscriber();
 
-            let initial = subscriber
-                .with_observer(|| ScopedFuture::new(initial_value))
+            // Run the initial value under the effect's owner, as the synchronous
+            // constructors do, so the next run cleans up what it created.
+            let initial = owner
+                .with(|| {
+                    subscriber
+                        .with_observer(|| ScopedFuture::new(initial_value))
+                })
                 .await;
             *value.write().or_poisoned() = Some(initial);
 

@@ -255,3 +255,51 @@ async fn paused_effect_pauses() {
         })
         .await
 }
+
+#[cfg(feature = "effects")]
+#[tokio::test]
+async fn async_render_effect_cleans_up_its_initial_run() {
+    use imports::*;
+    use reactive_graph::owner::on_cleanup;
+
+    _ = Executor::init_tokio();
+    let owner = Owner::new();
+    owner.set();
+
+    task::LocalSet::new()
+        .run_until(async {
+            let a = RwSignal::new(0);
+            let cleaned_up = Arc::new(RwLock::new(Vec::new()));
+
+            let effect = RenderEffect::new_with_async_value(
+                {
+                    let cleaned_up = cleaned_up.clone();
+                    move |_| {
+                        let value = a.get();
+                        let cleaned_up = cleaned_up.clone();
+                        on_cleanup(move || {
+                            cleaned_up.write().unwrap().push(value)
+                        });
+                    }
+                },
+                {
+                    let cleaned_up = cleaned_up.clone();
+                    async move {
+                        let value = a.get();
+                        on_cleanup(move || {
+                            cleaned_up.write().unwrap().push(value)
+                        });
+                    }
+                },
+            )
+            .await;
+
+            a.set(1);
+            Executor::tick().await;
+
+            // The initial run belongs to the effect, so rerunning it cleans that run up.
+            assert_eq!(*cleaned_up.read().unwrap(), vec![0]);
+            mem::forget(effect);
+        })
+        .await
+}
