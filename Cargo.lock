@@ -2243,6 +2243,7 @@ dependencies = [
  "send_wrapper",
  "tracing",
  "wasm-bindgen",
+ "wasm-bindgen-test",
  "web-sys",
 ]
 
