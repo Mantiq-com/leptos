@@ -7,7 +7,7 @@ use leptos::{
     prelude::{ArcTrigger, Notify, Track},
     reactive::{
         effect::RenderEffect,
-        owner::{Owner, use_context},
+        owner::{Owner, WeakOwner, use_context},
     },
     tachys::{
         dom::document,
@@ -32,7 +32,7 @@ pub struct TitleContext {
     formatter_stack: Arc<RwLock<Vec<(TitleId, Formatter)>>>,
     text_stack: Arc<RwLock<Vec<(TitleId, TextProp)>>>,
     revalidate: ArcTrigger,
-    owner: Option<Owner>,
+    owner: Option<WeakOwner>,
     #[allow(clippy::type_complexity)]
     effect: Arc<Mutex<Option<RenderEffect<Option<Oco<'static, str>>>>>>,
 }
@@ -44,7 +44,7 @@ impl Default for TitleContext {
             formatter_stack: Default::default(),
             text_stack: Default::default(),
             revalidate: Default::default(),
-            owner: Owner::current(),
+            owner: Owner::current().map(|owner| owner.downgrade()),
             effect: Default::default(),
         }
     }
@@ -81,10 +81,12 @@ impl TitleContext {
                     text
                 })
             };
-            *effect_lock = Some(match &self.owner {
-                Some(owner) => owner.with(make_effect),
-                None => make_effect(),
-            });
+            *effect_lock = match &self.owner {
+                Some(owner) => {
+                    owner.upgrade().map(|owner| owner.with(make_effect))
+                }
+                None => Some(make_effect()),
+            };
         }
     }
 
