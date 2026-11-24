@@ -96,7 +96,7 @@ html-escape = { default-features = false, version = "0.3" }
 lru = { default-features = false, version = "0.18" }
 mime = { default-features = false, version = "0.3" }
 const_format = { default-features = false, version = "0.2" }
-gloo-net = { default-features = false, version = "0.7" }
+gloo-net = { default-features = false, version = "0.8" }
 url = { default-features = false, version = "2.5" }
 tokio = { default-features = false, version = "1.49" }
 base64 = { default-features = false, version = "0.23" }
